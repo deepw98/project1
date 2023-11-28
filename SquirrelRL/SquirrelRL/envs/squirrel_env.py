@@ -165,6 +165,8 @@ render_thread_instance.start()
 episodes = 1000
 update_display_interval = 10
 
+clock = pygame.time.Clock()
+
 for episode in range(episodes):
     state = env.reset()
     state = np.expand_dims(state, axis=0)
@@ -173,7 +175,14 @@ for episode in range(episodes):
     done = False
 
     while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
         action = np.argmax(model.predict(state))
+        q_values = model.predict(state)
+        print(f"Q-values: {q_values}")
         next_state, reward, done, _ = env.step(action)
         next_state = np.expand_dims(next_state, axis=0)
 
@@ -186,8 +195,12 @@ for episode in range(episodes):
         total_reward += reward
         state = next_state
 
-        # Check and handle events every update_display_interval frames
+        # Render the environment
         if env.steps % update_display_interval == 0:
-            time.sleep(0.01)  # Ensure that the rendering thread has time to handle events
+            env.render()
+            clock.tick(10)  # Adjust the frame rate as needed
 
     print(f"Episode: {episode + 1}, Total Reward: {total_reward}")
+
+# Close the pygame window when training is complete
+env.close()
